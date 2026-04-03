@@ -1,0 +1,18 @@
+services:
+  vault:
+    image: hashicorp/vault:1.21.4
+    container_name: vault-local
+    restart: unless-stopped
+    entrypoint: ["vault"]
+    ports:
+      - "8200:8200"
+      - "8201:8201"
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+    volumes:
+      - ./config/docker:/vault/config
+      - ./vault-data:/vault/file
+      - ./.local:/work
+    command: ["server", "-config=/vault/config/vault.hcl"]

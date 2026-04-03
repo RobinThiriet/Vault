@@ -1,34 +1,30 @@
 SHELL := /bin/bash
 
-.PHONY: dev-up dev-down dev-status local-up local-init local-unseal local-login local-down local-status clean
+.PHONY: up down logs status init unseal login shell clean
 
-dev-up:
-	./scripts/dev-up.sh
+up:
+	./scripts/up.sh
 
-dev-down:
-	./scripts/dev-down.sh
+down:
+	./scripts/down.sh
 
-dev-status:
-	./scripts/dev-status.sh
+logs:
+	docker compose logs -f vault
 
-local-up:
-	./scripts/local-up.sh
+status:
+	./scripts/status.sh
 
-local-init:
-	./scripts/local-init.sh
+init:
+	./scripts/init.sh
 
-local-unseal:
-	./scripts/local-unseal.sh
+unseal:
+	./scripts/unseal.sh
 
-local-login:
-	./scripts/local-login.sh
+login:
+	./scripts/login.sh
 
-local-down:
-	./scripts/local-down.sh
-
-local-status:
-	./scripts/local-status.sh
+shell:
+	docker compose exec vault sh
 
 clean:
-	rm -rf .runtime .local .vault-token
-
+	rm -rf .local .vault-token vault-data

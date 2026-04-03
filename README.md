@@ -1,137 +1,120 @@
 # Vault Local Lab
 
-Base de travail pour installer HashiCorp Vault en local, s'entrainer dessus, et garder une trace proprement documentee dans Git.
+Base de travail Docker Compose pour lancer HashiCorp Vault en local, s'entrainer dessus, et partager un environnement reproductible.
 
 ## Objectifs
 
-- demarrer Vault tres vite pour se faire la main
-- comprendre le cycle reel `start -> init -> unseal -> login`
-- versionner un environnement de lab simple et reproductible
+- demarrer Vault sans installation locale du binaire
+- apprendre le cycle `up -> init -> unseal -> login`
+- garder un repo simple a lancer pour d'autres personnes
 
 ## Prerequis
 
-- Ubuntu 24.04 ou equivalent Linux
-- `vault` installe localement
+- Docker
+- Docker Compose
 - acces a ce depot Git
 
-## Version installee
+## Stack choisie
 
-Au moment de cette mise en place, Vault Community est installe localement en version `1.21.4`.
+- image: `hashicorp/vault:1.21.4`
+- mode: conteneur local persistant
+- UI/API: `http://127.0.0.1:8200`
+- stockage local: `vault-data/`
 
-Verification:
-
-```bash
-vault version
-```
-
-## Deux modes d'entrainement
-
-### 1. Mode dev
-
-Le plus simple pour apprendre les commandes sans se soucier de l'initialisation. Vault demarre avec un token root fixe.
+## Demarrage rapide
 
 ```bash
-make dev-up
-export VAULT_ADDR=http://127.0.0.1:8200
-export VAULT_TOKEN=root
-vault status
-vault secrets list
+make up
+make init
+make unseal
+make login
+make status
 ```
 
 Arret:
 
 ```bash
-make dev-down
+make down
 ```
 
-### 2. Mode local persistant
-
-Le plus utile pour comprendre un vrai cycle d'administration local:
+Logs:
 
 ```bash
-make local-up
-export VAULT_ADDR=http://127.0.0.1:8200
-make local-init
-make local-unseal
-make local-login
-vault status
+make logs
 ```
 
-Arret:
+Shell dans le conteneur:
 
 ```bash
-make local-down
+make shell
 ```
 
-Les donnees locales et les cles d'init sont stockees hors Git dans:
+## Ce que fait chaque commande
 
-- `.runtime/`
+### `make up`
+
+Demarre Vault avec Docker Compose.
+
+### `make init`
+
+Initialise Vault et enregistre les secrets de bootstrap dans `.local/keys/init.txt`.
+
+### `make unseal`
+
+Utilise la cle d'initialisation stockee localement pour desceler Vault.
+
+### `make login`
+
+Utilise le root token stocke localement pour authentifier la CLI dans le conteneur.
+
+### `make status`
+
+Affiche l'etat courant de Vault.
+
+## Stockage local
+
+Ces repertoires sont exclus de Git:
+
 - `.local/`
+- `vault-data/`
 
-## Parcours d'apprentissage recommande
+Ils contiennent respectivement:
 
-### Etape 1. Verifier l'etat du serveur
+- les cles et token d'initialisation locaux
+- les donnees persistantes du conteneur Vault
+
+## Premier parcours d'apprentissage
+
+Une fois `make login` execute:
 
 ```bash
-vault status
-```
-
-### Etape 2. Activer un moteur KV v2
-
-```bash
+docker compose exec vault sh
+export VAULT_ADDR=http://127.0.0.1:8200
 vault secrets enable -path=secret kv-v2
-```
-
-### Etape 3. Ecrire un secret
-
-```bash
 vault kv put secret/demo username=robin password=test123
-```
-
-### Etape 4. Lire un secret
-
-```bash
 vault kv get secret/demo
-```
-
-### Etape 5. Creer une policy
-
-```bash
-cat > /tmp/dev-read.hcl <<'EOF'
-path "secret/data/demo" {
-  capabilities = ["read"]
-}
-EOF
-
-vault policy write dev-read /tmp/dev-read.hcl
-```
-
-### Etape 6. Creer un token attache a la policy
-
-```bash
-vault token create -policy=dev-read
 ```
 
 ## Structure du repo
 
 ```text
-config/local/vault.hcl   Configuration du serveur local persistant
-scripts/dev-*.sh         Scripts pour le mode dev
-scripts/local-*.sh       Scripts pour le mode local persistant
+docker-compose.yml       Stack Docker Compose
+config/docker/vault.hcl  Configuration Vault
+scripts/*.sh             Scripts utilitaires
 Makefile                 Raccourcis de lancement
 ```
 
 ## Notes utiles
 
-- Le mode `dev` est parfait pour apprendre les commandes Vault.
-- Le mode `local` est preferable pour comprendre `init`, `unseal`, le stockage et le fonctionnement d'un serveur plus realiste.
-- Ce depot ignore volontairement les fichiers sensibles et temporaires.
+- cette version privilegie Docker Compose pour etre plus simple a partager
+- aucune installation systeme de `vault` n'est necessaire
+- l'historique Git conserve la trace du passage natif vers Docker
 
-## Prochaine suite logique
+## Suite logique
 
 Une bonne suite pour enrichir ce repo:
 
 1. ajouter des exercices guides
 2. ajouter des policies d'exemple
-3. ajouter AppRole, KV v2, Transit et PKI
-4. ajouter des scripts de reset du lab
+3. ajouter AppRole, Transit et PKI
+4. ajouter un reset complet du lab Docker
