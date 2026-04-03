@@ -1,12 +1,25 @@
 # Vault Local Lab
 
-Base de travail Docker Compose pour lancer HashiCorp Vault en local, s'entrainer dessus, et partager un environnement reproductible.
+Environnement local de demonstration pour apprendre HashiCorp Vault avec Docker Compose, une documentation structuree et des ateliers pratiques.
 
-## Objectifs
+## Pourquoi ce repo
 
-- demarrer Vault sans installation locale du binaire
-- apprendre le cycle `up -> init -> unseal -> login`
-- garder un repo simple a lancer pour d'autres personnes
+Ce projet sert de base de travail pour:
+
+- lancer Vault rapidement sur un poste local
+- comprendre le cycle d'administration `init`, `unseal` et `login`
+- pratiquer sur un environnement reproductible
+- partager une base propre et documentee avec d'autres personnes
+
+## Perimetre
+
+Ce repo est pense pour l'apprentissage et la demonstration locale.
+
+Il ne cherche pas a reproduire une architecture de production. Il privilegie:
+
+- la simplicite de lancement
+- la lisibilite
+- la reproductibilite
 
 ## Prerequis
 
@@ -14,12 +27,14 @@ Base de travail Docker Compose pour lancer HashiCorp Vault en local, s'entrainer
 - Docker Compose
 - acces a ce depot Git
 
-## Stack choisie
+## Stack
 
-- image: `hashicorp/vault:1.21.4`
-- mode: conteneur local persistant
-- UI/API: `http://127.0.0.1:8200`
-- stockage local: `vault-data/`
+- image Vault: `hashicorp/vault:1.21.4`
+- orchestration: Docker Compose
+- configuration: HCL versionnee dans le repo
+- persistance: `vault-data/`
+- secrets de bootstrap locaux: `.local/`
+- UI/API locale: `http://127.0.0.1:8200`
 
 ## Demarrage rapide
 
@@ -31,77 +46,58 @@ make login
 make status
 ```
 
-Arret:
+Pour arreter le lab:
 
 ```bash
 make down
 ```
 
-Logs:
+## Documentation
 
-```bash
-make logs
+- [docs/architecture.md](/root/Vault/docs/architecture.md)
+- [docs/operations.md](/root/Vault/docs/operations.md)
+
+## Architecture
+
+Vue simplifiee:
+
+```text
+Utilisateur
+  -> Makefile
+  -> scripts/
+  -> Docker Compose
+  -> conteneur Vault
+  -> stockage local vault-data/
+  -> cles locales .local/
 ```
 
-Shell dans le conteneur:
+Pour le schema detaille et l'explication composant par composant:
 
-```bash
-make shell
-```
+- [docs/architecture.md](/root/Vault/docs/architecture.md)
 
-## Ce que fait chaque commande
+## Commandes principales
 
-### `make up`
+- `make up` demarre Vault
+- `make init` initialise Vault
+- `make unseal` descelle Vault
+- `make login` connecte la CLI avec le token root
+- `make status` affiche l'etat du serveur
+- `make logs` affiche les logs du conteneur
+- `make shell` ouvre un shell dans le conteneur
+- `make down` arrete le lab
+- `make clean` supprime les donnees locales du lab
 
-Demarre Vault avec Docker Compose.
+Le detail operational est documente ici:
 
-### `make init`
-
-Initialise Vault et enregistre les secrets de bootstrap dans `.local/keys/init.txt`.
-
-### `make unseal`
-
-Utilise la cle d'initialisation stockee localement pour desceler Vault.
-
-### `make login`
-
-Utilise le root token stocke localement pour authentifier la CLI dans le conteneur.
-
-### `make status`
-
-Affiche l'etat courant de Vault.
-
-## Stockage local
-
-Ces repertoires sont exclus de Git:
-
-- `.local/`
-- `vault-data/`
-
-Ils contiennent respectivement:
-
-- les cles et token d'initialisation locaux
-- les donnees persistantes du conteneur Vault
-
-## Premier parcours d'apprentissage
-
-Une fois `make login` execute:
-
-```bash
-docker compose exec vault sh
-export VAULT_ADDR=http://127.0.0.1:8200
-vault secrets enable -path=secret kv-v2
-vault kv put secret/demo username=robin password=test123
-vault kv get secret/demo
-```
+- [docs/operations.md](/root/Vault/docs/operations.md)
 
 ## Ateliers guides
 
-Le repo contient maintenant un premier atelier pas a pas:
+Premier atelier disponible:
 
 - [workshops/01-kv-policy-token.md](/root/Vault/workshops/01-kv-policy-token.md)
 
-Fichier de policy associe:
+Policy d'exemple associee:
 
 - [policies/dev-read-demo.hcl](/root/Vault/policies/dev-read-demo.hcl)
 
@@ -110,23 +106,40 @@ Fichier de policy associe:
 ```text
 docker-compose.yml       Stack Docker Compose
 config/docker/vault.hcl  Configuration Vault
+docs/*.md                Documentation d'architecture et d'exploitation
 policies/*.hcl           Policies d'exemple
 scripts/*.sh             Scripts utilitaires
 workshops/*.md           Ateliers guides
 Makefile                 Raccourcis de lancement
 ```
 
-## Notes utiles
+## Donnees locales
 
-- cette version privilegie Docker Compose pour etre plus simple a partager
-- aucune installation systeme de `vault` n'est necessaire
-- l'historique Git conserve la trace du passage natif vers Docker
+Ces repertoires sont exclus de Git:
 
-## Suite logique
+- `.local/`
+- `vault-data/`
 
-Une bonne suite pour enrichir ce repo:
+Ils contiennent respectivement:
 
-1. ajouter des exercices guides
-2. ajouter des policies d'exemple
-3. ajouter AppRole, Transit et PKI
-4. ajouter un reset complet du lab Docker
+- les cles et tokens de bootstrap locaux
+- les donnees persistantes du serveur Vault
+
+## Limites connues
+
+Ce lab est volontairement non production:
+
+- pas de TLS
+- un seul noeud
+- backend `file`
+- root token conserve localement pour l'apprentissage
+
+## Roadmap
+
+Pistes d'amelioration du repo:
+
+1. ajouter un atelier AppRole
+2. ajouter un atelier Transit
+3. ajouter un atelier PKI
+4. ajouter un mode TLS local
+5. ajouter un audit device
