@@ -1,0 +1,5 @@
+.envrc
+.runtime/
+.local/
+.vault-token
+
