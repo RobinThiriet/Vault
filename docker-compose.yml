@@ -15,4 +15,5 @@ services:
       - ./config/docker:/vault/config
       - ./vault-data:/vault/file
       - ./.local:/work
+      - ./:/workspace:ro
     command: ["server", "-config=/vault/config/vault.hcl"]

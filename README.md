@@ -95,12 +95,24 @@ vault kv put secret/demo username=robin password=test123
 vault kv get secret/demo
 ```
 
+## Ateliers guides
+
+Le repo contient maintenant un premier atelier pas a pas:
+
+- [workshops/01-kv-policy-token.md](/root/Vault/workshops/01-kv-policy-token.md)
+
+Fichier de policy associe:
+
+- [policies/dev-read-demo.hcl](/root/Vault/policies/dev-read-demo.hcl)
+
 ## Structure du repo
 
 ```text
 docker-compose.yml       Stack Docker Compose
 config/docker/vault.hcl  Configuration Vault
+policies/*.hcl           Policies d'exemple
 scripts/*.sh             Scripts utilitaires
+workshops/*.md           Ateliers guides
 Makefile                 Raccourcis de lancement
 ```
 
